@@ -1,0 +1,2377 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>EduFinance Pro - Gestion Scolaire</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #f1f5f9;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        /* Animations */
+        @keyframes pop {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .animate-pop {
+            animation: pop 0.2s ease-out;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e2e8f0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+        
+        /* Mobile container */
+        .app-container {
+            max-width: 428px;
+            width: 100%;
+            background-color: #f1f5f9;
+            min-height: 100vh;
+            position: relative;
+        }
+        
+        /* Progress bar */
+        .progress-bar {
+            height: 6px;
+            border-radius: 9999px;
+            overflow: hidden;
+        }
+        
+        /* Cards */
+        .card-hover {
+            transition: all 0.2s ease;
+        }
+        .card-hover:active {
+            transform: scale(0.98);
+        }
+        
+        /* Bottom navigation */
+        .bottom-nav {
+            backdrop-filter: blur(10px);
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="app">
+        <!-- Header -->
+        <header class="bg-white border-b border-slate-100 px-4 py-3 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-blue-600 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-graduation-cap text-white text-sm"></i>
+                </div>
+                <div>
+                    <h1 class="text-sm font-black text-slate-800 leading-none" id="app-title">EduFinance Pro</h1>
+                    <p class="text-xs text-slate-400 leading-none mt-0.5" id="screen-title">Tableau de bord</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button onclick="setActiveScreen('notifications')" class="relative w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center">
+                    <i class="fas fa-bell text-slate-600 text-sm"></i>
+                    <span id="notification-badge" class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold hidden">3</span>
+                </button>
+                <button onclick="toggleMenu()" class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center">
+                    <i class="fas fa-bars text-slate-600 text-sm"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto p-4 pb-24" id="main-content" style="height: calc(100vh - 120px); overflow-y: auto;">
+            <!-- Dashboard will be loaded here -->
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white border-t border-slate-100 px-2 py-2 z-30 shadow-lg bottom-nav">
+            <div class="flex justify-around">
+                <button onclick="setActiveScreen('dashboard')" class="nav-item flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all" data-screen="dashboard">
+                    <i class="fas fa-chart-pie text-xl" id="icon-dashboard"></i>
+                    <span class="text-xs font-semibold" id="label-dashboard">Accueil</span>
+                    <div class="w-1 h-1 rounded-full bg-blue-600 hidden" id="dot-dashboard"></div>
+                </button>
+                <button onclick="setActiveScreen('students')" class="nav-item flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all" data-screen="students">
+                    <i class="fas fa-users text-xl" id="icon-students"></i>
+                    <span class="text-xs font-semibold" id="label-students">Élèves</span>
+                    <div class="w-1 h-1 rounded-full bg-blue-600 hidden" id="dot-students"></div>
+                </button>
+                <button onclick="setActiveScreen('payments')" class="nav-item flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all" data-screen="payments">
+                    <i class="fas fa-credit-card text-xl" id="icon-payments"></i>
+                    <span class="text-xs font-semibold" id="label-payments">Paiements</span>
+                    <div class="w-1 h-1 rounded-full bg-blue-600 hidden" id="dot-payments"></div>
+                </button>
+                <button onclick="setActiveScreen('expenses')" class="nav-item flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all" data-screen="expenses">
+                    <i class="fas fa-wallet text-xl" id="icon-expenses"></i>
+                    <span class="text-xs font-semibold" id="label-expenses">Dépenses</span>
+                    <div class="w-1 h-1 rounded-full bg-blue-600 hidden" id="dot-expenses"></div>
+                </button>
+                <button onclick="setActiveScreen('payroll')" class="nav-item flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all" data-screen="payroll">
+                    <i class="fas fa-receipt text-xl" id="icon-payroll"></i>
+                    <span class="text-xs font-semibold" id="label-payroll">Paie</span>
+                    <div class="w-1 h-1 rounded-full bg-blue-600 hidden" id="dot-payroll"></div>
+                </button>
+                <button onclick="toggleMenu()" class="flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all text-slate-400">
+                    <i class="fas fa-ellipsis-h text-xl"></i>
+                    <span class="text-xs font-semibold">Plus</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- Side Menu -->
+        <div id="side-menu" class="fixed inset-0 z-50 hidden" onclick="toggleMenu()">
+            <div class="absolute inset-0 bg-black/30 backdrop-blur-sm"></div>
+            <div class="relative ml-auto w-72 bg-white h-full shadow-2xl flex flex-col animate-pop" onclick="event.stopPropagation()">
+                <div class="p-5 bg-gradient-to-r from-blue-600 to-blue-800 text-white">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center">
+                            <i class="fas fa-graduation-cap text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <p class="font-black text-base" id="school-name">Collège Excellence Dakar</p>
+                            <p class="text-blue-200 text-xs" id="academic-year">2024-2025</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto p-3 space-y-1">
+                    <button onclick="navigateTo('dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all menu-item" data-menu="dashboard">
+                        <i class="fas fa-chart-pie w-5 text-slate-400"></i>
+                        <span class="font-semibold text-sm">Tableau de bord</span>
+                    </button>
+                    <button onclick="navigateTo('students')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all menu-item" data-menu="students">
+                        <i class="fas fa-users w-5 text-slate-400"></i>
+                        <span class="font-semibold text-sm">Gestion des élèves</span>
+                    </button>
+                    <button onclick="navigateTo('payments')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all menu-item" data-menu="payments">
+                        <i class="fas fa-credit-card w-5 text-slate-400"></i>
+                        <span class="font-semibold text-sm">Encaissements</span>
+                    </button>
+                    <button onclick="navigateTo('expenses')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all menu-item" data-menu="expenses">
+                        <i class="fas fa-wallet w-5 text-slate-400"></i>
+                        <span class="font-semibold text-sm">Dépenses</span>
+                    </button>
+                    <button onclick="navigateTo('payroll')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all menu-item" data-menu="payroll">
+                        <i class="fas fa-receipt w-5 text-slate-400"></i>
+                        <span class="font-semibold text-sm">Gestion de la paie</span>
+                    </button>
+                    <button onclick="navigateTo('attendance')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all menu-item" data-menu="attendance">
+                        <i class="fas fa-user-check w-5 text-slate-400"></i>
+                        <span class="font-semibold text-sm">Pointage & Appel</span>
+                    </button>
+                    <button onclick="navigateTo('calendar')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all menu-item" data-menu="calendar">
+                        <i class="fas fa-calendar-alt w-5 text-slate-400"></i>
+                        <span class="font-semibold text-sm">Calendrier académique</span>
+                    </button>
+                    <button onclick="navigateTo('notifications')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all menu-item" data-menu="notifications">
+                        <i class="fas fa-bell w-5 text-slate-400"></i>
+                        <span class="font-semibold text-sm">Notifications</span>
+                        <span class="ml-auto w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold" id="menu-notif-badge">3</span>
+                    </button>
+                    <button onclick="navigateTo('smart-import')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all menu-item" data-menu="smart-import">
+                        <i class="fas fa-brain w-5 text-slate-400"></i>
+                        <span class="font-semibold text-sm">Smart Import IA</span>
+                    </button>
+                    <button onclick="navigateTo('parent')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all menu-item" data-menu="parent">
+                        <i class="fas fa-home w-5 text-slate-400"></i>
+                        <span class="font-semibold text-sm">Espace Parent</span>
+                    </button>
+                </div>
+                <div class="p-4 border-t border-slate-100">
+                    <p class="text-xs text-slate-400 text-center">EduFinance Pro v2.1 · 2025</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals Container -->
+        <div id="modal-container"></div>
+    </div>
+
+    <script>
+        // ==================== CONSTANTS ====================
+        const SCHOOL_NAME = "Collège Excellence Dakar";
+        const ACADEMIC_YEAR = "2024-2025";
+        const MONTHS = ["Jan","Fév","Mar","Avr","Mai","Juin","Juil","Aoû","Sep","Oct","Nov","Déc"];
+        const today = new Date().toISOString().split('T')[0];
+        
+        // Formatage monétaire
+        const fmt = (n) => {
+            return new Intl.NumberFormat("fr-SN", {
+                style: "currency", 
+                currency: "XOF", 
+                maximumFractionDigits: 0
+            }).format(n).replace('XOF', 'FCFA');
+        };
+        
+        const fmtShort = (n) => {
+            if (n >= 1000000) return (n/1000000).toFixed(1) + 'M';
+            if (n >= 1000) return (n/1000).toFixed(0) + 'K';
+            return String(n);
+        };
+
+        // ==================== INITIAL DATA ====================
+        let students = [
+            {id:"EL001",name:"Aminata Diallo",class:"3ème A",parent:"Mamadou Diallo",phone:"+221 77 123 4567",fees:450000,paid:450000,status:"payé",lastPayment:"2025-01-15",present:true,avatar:"AD"},
+            {id:"EL002",name:"Ibrahima Sow",class:"3ème B",parent:"Fatou Sow",phone:"+221 76 234 5678",fees:450000,paid:150000,status:"partiel",lastPayment:"2025-01-10",present:true,avatar:"IS"},
+            {id:"EL003",name:"Khadija Ndiaye",class:"4ème A",parent:"Cheikh Ndiaye",phone:"+221 78 345 6789",fees:420000,paid:0,status:"impayé",lastPayment:null,present:false,avatar:"KN"},
+            {id:"EL004",name:"Moussa Traore",class:"4ème B",parent:"Awa Traore",phone:"+221 70 456 7890",fees:420000,paid:420000,status:"payé",lastPayment:"2025-02-01",present:true,avatar:"MT"},
+            {id:"EL005",name:"Rokhaya Mbaye",class:"5ème A",parent:"Omar Mbaye",phone:"+221 77 567 8901",fees:390000,paid:195000,status:"partiel",lastPayment:"2025-01-20",present:false,avatar:"RM"},
+            {id:"EL006",name:"Cheikh Diop",class:"5ème B",parent:"Adja Diop",phone:"+221 76 678 9012",fees:390000,paid:390000,status:"payé",lastPayment:"2025-02-05",present:true,avatar:"CD"},
+            {id:"EL007",name:"Fatimata Bah",class:"6ème A",parent:"Seydou Bah",phone:"+221 78 789 0123",fees:360000,paid:360000,status:"payé",lastPayment:"2025-01-28",present:true,avatar:"FB"},
+            {id:"EL008",name:"Aliou Camara",class:"6ème B",parent:"Mariama Camara",phone:"+221 70 890 1234",fees:360000,paid:120000,status:"partiel",lastPayment:"2025-01-05",present:true,avatar:"AC"},
+        ];
+
+        let expenses = [
+            {id:"DEP001",date:"2025-02-01",category:"Salaires",description:"Salaires enseignants Février",amount:3200000,validated:true,attachments:[]},
+            {id:"DEP002",date:"2025-02-03",category:"Fournitures",description:"Achat cahiers et stylos",amount:145000,validated:true,attachments:[]},
+            {id:"DEP003",date:"2025-02-05",category:"Utilités",description:"Facture électricité",amount:280000,validated:false,attachments:[]},
+            {id:"DEP004",date:"2025-02-08",category:"Maintenance",description:"Réparation toiture",amount:520000,validated:true,attachments:[]},
+            {id:"DEP005",date:"2025-02-10",category:"Salaires",description:"Salaires personnel admin",amount:1850000,validated:true,attachments:[]},
+            {id:"DEP006",date:"2025-02-12",category:"Autres",description:"Frais bancaires",amount:45000,validated:false,attachments:[]},
+        ];
+
+        let staff = [
+            {id:"STF001",name:"M. Alioune Ba",role:"Directeur",salary:750000,paid:true},
+            {id:"STF002",name:"Mme Ndèye Fall",role:"Prof. Maths",salary:420000,paid:true},
+            {id:"STF003",name:"M. Seydou Gaye",role:"Prof. Français",salary:400000,paid:false},
+            {id:"STF004",name:"Mme Aissatou Ly",role:"Prof. Sciences",salary:410000,paid:true},
+            {id:"STF005",name:"M. Abdou Diallo",role:"Comptable",salary:380000,paid:false},
+            {id:"STF006",name:"Mme Coumba Mbaye",role:"Secrétaire",salary:280000,paid:true},
+        ];
+
+        const revenueData = [
+            {month:"Sep",revenus:4200000,depenses:1800000},{month:"Oct",revenus:3800000,depenses:2100000},
+            {month:"Nov",revenus:5100000,depenses:1950000},{month:"Déc",revenus:2900000,depenses:2400000},
+            {month:"Jan",revenus:6200000,depenses:2000000},{month:"Fév",revenus:5800000,depenses:2200000},
+        ];
+
+        const calendarEvents = [
+            {id:1,date:"2025-02-20",title:"Conseil de classe 3ème",type:"réunion",color:"#1a56db"},
+            {id:2,date:"2025-02-25",title:"Examens blancs",type:"examen",color:"#dc2626"},
+            {id:3,date:"2025-03-01",title:"Vacances mi-trimestre",type:"vacances",color:"#059669"},
+            {id:4,date:"2025-03-10",title:"Réunion parents d'élèves",type:"réunion",color:"#1a56db"},
+            {id:5,date:"2025-03-15",title:"Remise de bulletins",type:"événement",color:"#7c3aed"},
+        ];
+
+        let notifications = [
+            {id:1,type:"warning",title:"Impayés critiques",msg:"12 élèves ont des frais impayés depuis +60 jours",time:"il y a 2h",read:false},
+            {id:2,type:"success",title:"Paiement reçu",msg:"Aminata Diallo — 300 000 FCFA reçus",time:"il y a 5h",read:false},
+            {id:3,type:"info",title:"Rappel échéance",msg:"Clôture comptable du mois dans 3 jours",time:"il y a 1j",read:true},
+            {id:4,type:"success",title:"Import réussi",msg:"48 élèves importés via Smart Import IA",time:"il y a 2j",read:true},
+        ];
+
+        // ==================== STATE ====================
+        let currentScreen = 'dashboard';
+        let selectedStudent = null;
+        let selectedReceipt = null;
+        let showAddStudent = false;
+        let showAddExpense = false;
+        let expenseFilters = {
+            category: 'Toutes',
+            status: 'Tous',
+            from: '',
+            to: '',
+            min: '',
+            max: ''
+        };
+        let showFilters = false;
+        let newStudent = {name:'', class:'', parent:'', phone:'', fees:'', paid:''};
+        let newExpense = {date: today, category:'Salaires', description:'', amount:''};
+        let attachFile = null;
+        let attendanceFilter = 'tous';
+        let calendarMonth = 1; // Février
+        let searchQuery = '';
+        let paymentSearch = '';
+        let notifSearch = '';
+
+        // ==================== UTILITIES ====================
+        function exportToPDF(title, headers, rows) {
+            const html = `<!DOCTYPE html>
+            <html>
+            <head><meta charset="UTF-8"><title>${title}</title>
+            <style>
+                body{font-family:Arial,sans-serif;padding:24px;color:#1e293b;font-size:12px}
+                h1{font-size:18px;color:#1a56db;margin-bottom:4px}
+                p.sub{color:#64748b;font-size:11px;margin-bottom:20px}
+                table{width:100%;border-collapse:collapse}
+                th{background:#1a56db;color:white;padding:8px 10px;text-align:left;font-size:11px}
+                td{padding:7px 10px;border-bottom:1px solid #e2e8f0}
+                tr:nth-child(even) td{background:#f8fafc}
+                .footer{margin-top:20px;font-size:10px;color:#94a3b8}
+            </style>
+            </head>
+            <body>
+                <h1>${title}</h1>
+                <p class="sub">${SCHOOL_NAME} — ${ACADEMIC_YEAR} — Généré le ${new Date().toLocaleDateString("fr-SN")}</p>
+                <table>
+                    <thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>
+                    <tbody>${rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+                </table>
+                <p class="footer">EduFinance Pro — Document généré automatiquement</p>
+            </body>
+            </html>`;
+            
+            const win = window.open('', '_blank');
+            if (win) {
+                win.document.write(html);
+                win.document.close();
+                setTimeout(() => win.print(), 500);
+            }
+        }
+
+        function exportToCSV(headers, rows, filename) {
+            const BOM = "\uFEFF";
+            const csv = [headers, ...rows].map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(';')).join('\n');
+            const blob = new Blob([BOM + csv], {type: "text/csv;charset=utf-8;"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename + ".csv";
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function updateNavigation() {
+            // Update bottom nav
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                const screen = item.getAttribute('data-screen');
+                const icon = document.getElementById(`icon-${screen}`);
+                const label = document.getElementById(`label-${screen}`);
+                const dot = document.getElementById(`dot-${screen}`);
+                
+                if (screen === currentScreen) {
+                    item.classList.add('text-blue-600');
+                    item.classList.remove('text-slate-400');
+                    if (icon) icon.classList.add('text-blue-600');
+                    if (label) {
+                        label.classList.add('text-blue-600');
+                        label.classList.remove('text-slate-400');
+                    }
+                    if (dot) dot.classList.remove('hidden');
+                } else {
+                    item.classList.remove('text-blue-600');
+                    item.classList.add('text-slate-400');
+                    if (icon) {
+                        icon.classList.remove('text-blue-600');
+                        icon.classList.add('text-slate-400');
+                    }
+                    if (label) {
+                        label.classList.remove('text-blue-600');
+                        label.classList.add('text-slate-400');
+                    }
+                    if (dot) dot.classList.add('hidden');
+                }
+            });
+
+            // Update menu items
+            const menuItems = document.querySelectorAll('.menu-item');
+            menuItems.forEach(item => {
+                const menuScreen = item.getAttribute('data-menu');
+                if (menuScreen === currentScreen) {
+                    item.classList.add('bg-blue-50', 'text-blue-700');
+                    item.classList.remove('text-slate-600');
+                } else {
+                    item.classList.remove('bg-blue-50', 'text-blue-700');
+                    item.classList.add('text-slate-600');
+                }
+            });
+
+            // Update title
+            const titles = {
+                dashboard: 'Tableau de bord',
+                students: 'Gestion des élèves',
+                payments: 'Encaissements',
+                expenses: 'Dépenses',
+                payroll: 'Gestion de la paie',
+                attendance: 'Pointage & Appel',
+                calendar: 'Calendrier académique',
+                notifications: 'Notifications',
+                'smart-import': 'Smart Import IA',
+                parent: 'Espace Parent'
+            };
+            document.getElementById('screen-title').textContent = titles[currentScreen] || 'Tableau de bord';
+
+            // Update notification badge
+            const unreadCount = notifications.filter(n => !n.read).length;
+            const badge = document.getElementById('notification-badge');
+            const menuBadge = document.getElementById('menu-notif-badge');
+            
+            if (unreadCount > 0) {
+                badge.classList.remove('hidden');
+                badge.textContent = unreadCount;
+                menuBadge.classList.remove('hidden');
+                menuBadge.textContent = unreadCount;
+            } else {
+                badge.classList.add('hidden');
+                menuBadge.classList.add('hidden');
+            }
+        }
+
+        // ==================== SCREEN RENDERING ====================
+        function renderScreen() {
+            const mainContent = document.getElementById('main-content');
+            
+            switch(currentScreen) {
+                case 'dashboard':
+                    mainContent.innerHTML = renderDashboard();
+                    initDashboardCharts();
+                    break;
+                case 'students':
+                    mainContent.innerHTML = renderStudents();
+                    break;
+                case 'payments':
+                    mainContent.innerHTML = renderPayments();
+                    break;
+                case 'expenses':
+                    mainContent.innerHTML = renderExpenses();
+                    break;
+                case 'payroll':
+                    mainContent.innerHTML = renderPayroll();
+                    break;
+                case 'attendance':
+                    mainContent.innerHTML = renderAttendance();
+                    break;
+                case 'calendar':
+                    mainContent.innerHTML = renderCalendar();
+                    break;
+                case 'notifications':
+                    mainContent.innerHTML = renderNotifications();
+                    break;
+                case 'smart-import':
+                    mainContent.innerHTML = renderSmartImport();
+                    break;
+                case 'parent':
+                    mainContent.innerHTML = renderParentPortal();
+                    break;
+                default:
+                    mainContent.innerHTML = renderDashboard();
+                    initDashboardCharts();
+            }
+            
+            updateNavigation();
+        }
+
+        // ==================== DASHBOARD ====================
+        function renderDashboard() {
+            const totalFees = students.reduce((sum, s) => sum + s.fees, 0);
+            const totalPaid = students.reduce((sum, s) => sum + s.paid, 0);
+            const totalExp = expenses.reduce((sum, e) => sum + e.amount, 0);
+            const balance = totalPaid - totalExp;
+            const paidCount = students.filter(s => s.status === 'payé').length;
+            const unpaidCount = students.filter(s => s.status === 'impayé').length;
+            const presentCount = students.filter(s => s.present).length;
+            const recoveryRate = totalFees > 0 ? Math.round((totalPaid / totalFees) * 100) : 0;
+            const attendanceRate = students.length > 0 ? Math.round((presentCount / students.length) * 100) : 0;
+
+            // Catégories de dépenses
+            const categories = {
+                Salaires: expenses.filter(e => e.category === 'Salaires').reduce((s, e) => s + e.amount, 0),
+                Fournitures: expenses.filter(e => e.category === 'Fournitures').reduce((s, e) => s + e.amount, 0),
+                Utilités: expenses.filter(e => e.category === 'Utilités').reduce((s, e) => s + e.amount, 0),
+                Maintenance: expenses.filter(e => e.category === 'Maintenance').reduce((s, e) => s + e.amount, 0),
+                Autres: expenses.filter(e => e.category === 'Autres').reduce((s, e) => s + e.amount, 0)
+            };
+
+            return `
+                <div class="space-y-5">
+                    <!-- Header Card -->
+                    <div class="bg-gradient-to-r from-blue-600 to-blue-800 rounded-2xl p-5 text-white">
+                        <p class="text-blue-200 text-xs font-semibold uppercase tracking-wide">${ACADEMIC_YEAR}</p>
+                        <h2 class="text-xl font-black mt-0.5">${SCHOOL_NAME}</h2>
+                        <div class="mt-4 flex items-end justify-between">
+                            <div>
+                                <p class="text-blue-200 text-xs font-semibold">Solde disponible</p>
+                                <p class="text-3xl font-black mt-0.5">${fmtShort(balance)} <span class="text-lg text-blue-300">FCFA</span></p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-blue-200 text-xs font-semibold">Taux recouvrement</p>
+                                <p class="text-2xl font-black">${recoveryRate}%</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 bg-blue-900/40 rounded-full h-2 overflow-hidden">
+                            <div class="h-full bg-white rounded-full" style="width: ${recoveryRate}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Stats Grid -->
+                    <div class="grid grid-cols-2 gap-3">
+                        ${renderStatCard('Encaissements', fmtShort(totalPaid), 'FCFA collectés', 'emerald', 'trending-up', 'payments')}
+                        ${renderStatCard('Dépenses', fmtShort(totalExp), 'FCFA dépensés', 'red', 'trending-down', 'expenses')}
+                        ${renderStatCard('Élèves', students.length, `${paidCount} à jour / ${unpaidCount} impayés`, 'blue', 'users', 'students')}
+                        ${renderStatCard('Présence', attendanceRate + '%', `${presentCount}/${students.length} présents`, 'violet', 'user-check', 'attendance')}
+                    </div>
+
+                    <!-- Chart Container -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="font-bold text-slate-800">Revenus vs Dépenses</h3>
+                            <span class="text-xs text-slate-400 font-medium">6 derniers mois</span>
+                        </div>
+                        <canvas id="revenueChart" width="400" height="180"></canvas>
+                    </div>
+
+                    <!-- Expense Distribution -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+                        <h3 class="font-bold text-slate-800 mb-3">Répartition des dépenses</h3>
+                        <div class="flex items-center gap-4">
+                            <canvas id="expensePieChart" width="120" height="120"></canvas>
+                            <div class="flex-1 space-y-1.5">
+                                ${Object.entries(categories).map(([name, value]) => `
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-1.5">
+                                            <div class="w-2 h-2 rounded-full" style="background-color: ${getCategoryColor(name)}"></div>
+                                            <span class="text-xs text-slate-600 font-medium">${name}</span>
+                                        </div>
+                                        <span class="text-xs font-bold text-slate-700">${fmtShort(value)}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStatCard(label, value, sub, color, icon, screen) {
+            const colors = {
+                emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-100' },
+                red: { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-100' },
+                blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-100' },
+                violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-100' }
+            };
+            const c = colors[color] || colors.blue;
+            
+            const icons = {
+                'trending-up': 'fas fa-arrow-up',
+                'trending-down': 'fas fa-arrow-down',
+                'users': 'fas fa-users',
+                'user-check': 'fas fa-user-check'
+            };
+
+            return `
+                <div onclick="setActiveScreen('${screen}')" class="bg-white rounded-2xl border ${c.border} shadow-sm p-4 cursor-pointer active:scale-[0.98] transition-transform card-hover">
+                    <div class="w-10 h-10 ${c.bg} rounded-xl flex items-center justify-center mb-3">
+                        <i class="${icons[icon] || 'fas fa-chart-line'} ${c.text} text-lg"></i>
+                    </div>
+                    <p class="text-2xl font-black text-slate-800 leading-tight">${value}</p>
+                    <p class="text-xs font-semibold text-slate-500 mt-0.5">${label}</p>
+                    <p class="text-xs text-slate-400 mt-1">${sub}</p>
+                </div>
+            `;
+        }
+
+        function getCategoryColor(category) {
+            const colors = {
+                Salaires: '#1a56db',
+                Fournitures: '#059669',
+                Utilités: '#d97706',
+                Maintenance: '#7c3aed',
+                Autres: '#64748b'
+            };
+            return colors[category] || '#64748b';
+        }
+
+        function initDashboardCharts() {
+            // Revenue Chart
+            const ctx = document.getElementById('revenueChart')?.getContext('2d');
+            if (ctx) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: revenueData.map(d => d.month),
+                        datasets: [
+                            {
+                                label: 'Revenus',
+                                data: revenueData.map(d => d.revenus / 1000000),
+                                borderColor: '#1a56db',
+                                backgroundColor: 'rgba(26, 86, 219, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'Dépenses',
+                                data: revenueData.map(d => d.depenses / 1000000),
+                                borderColor: '#dc2626',
+                                backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => `${context.dataset.label}: ${context.raw}M FCFA`
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: { color: '#f1f5f9' },
+                                ticks: { callback: (v) => v + 'M' }
+                            },
+                            x: {
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Pie Chart
+            const pieCtx = document.getElementById('expensePieChart')?.getContext('2d');
+            if (pieCtx) {
+                const categories = {
+                    Salaires: expenses.filter(e => e.category === 'Salaires').reduce((s, e) => s + e.amount, 0),
+                    Fournitures: expenses.filter(e => e.category === 'Fournitures').reduce((s, e) => s + e.amount, 0),
+                    Utilités: expenses.filter(e => e.category === 'Utilités').reduce((s, e) => s + e.amount, 0),
+                    Maintenance: expenses.filter(e => e.category === 'Maintenance').reduce((s, e) => s + e.amount, 0),
+                    Autres: expenses.filter(e => e.category === 'Autres').reduce((s, e) => s + e.amount, 0)
+                };
+
+                new Chart(pieCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: Object.keys(categories),
+                        datasets: [{
+                            data: Object.values(categories),
+                            backgroundColor: ['#1a56db', '#059669', '#d97706', '#7c3aed', '#64748b'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => `${context.label}: ${fmtShort(context.raw)} FCFA`
+                                }
+                            }
+                        },
+                        cutout: '60%'
+                    }
+                });
+            }
+        }
+
+        // ==================== STUDENTS ====================
+        function renderStudents() {
+            const filtered = students.filter(s => {
+                const matchesSearch = searchQuery === '' || 
+                    s.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                    s.id.toLowerCase().includes(searchQuery.toLowerCase());
+                const filter = document.getElementById('student-filter')?.value || 'tous';
+                const matchesFilter = filter === 'tous' || s.status === filter;
+                return matchesSearch && matchesFilter;
+            });
+
+            return `
+                <div class="space-y-4">
+                    <!-- Search and Add -->
+                    <div class="flex items-center gap-2">
+                        <div class="flex-1 relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input 
+                                type="text" 
+                                class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                placeholder="Rechercher..."
+                                value="${searchQuery}"
+                                oninput="searchQuery = this.value; renderScreen()"
+                            >
+                        </div>
+                        <button onclick="showAddStudentModal()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.97]">
+                            <i class="fas fa-user-plus text-xs"></i> Ajouter
+                        </button>
+                    </div>
+
+                    <!-- Export/Import -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        ${renderExportDropdown('students')}
+                        <button onclick="alert('Fonction d\\'import - À implémenter')" class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all">
+                            <i class="fas fa-upload text-xs"></i> Importer
+                        </button>
+                    </div>
+
+                    <!-- Status Tabs -->
+                    <div class="flex gap-2 overflow-x-auto pb-1">
+                        ${['tous', 'payé', 'partiel', 'impayé'].map(f => `
+                            <button 
+                                onclick="document.getElementById('student-filter').value = '${f}'; renderScreen()"
+                                class="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${(document.getElementById('student-filter')?.value || 'tous') === f ? 'bg-blue-600 text-white shadow-sm' : 'bg-white border border-slate-200 text-slate-600'}"
+                            >
+                                ${f.charAt(0).toUpperCase() + f.slice(1)} (${f === 'tous' ? students.length : students.filter(s => s.status === f).length})
+                            </button>
+                        `).join('')}
+                    </div>
+                    <input type="hidden" id="student-filter" value="tous">
+
+                    <!-- Student List -->
+                    <div class="space-y-2">
+                        ${filtered.map(s => `
+                            <div onclick="selectStudent('${s.id}')" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 cursor-pointer active:scale-[0.98] transition-transform card-hover animate-pop">
+                                <div class="flex items-center gap-3">
+                                    ${renderAvatar(s.avatar, s.status)}
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <p class="font-bold text-slate-800 text-sm">${s.name}</p>
+                                            ${renderStatusBadge(s.status)}
+                                        </div>
+                                        <p class="text-xs text-slate-400 mt-0.5">${s.class} · ${s.id}</p>
+                                        <div class="mt-1.5 bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                            <div class="h-full rounded-full ${getProgressColor(s.status)}" style="width: ${s.fees > 0 ? Math.round((s.paid / s.fees) * 100) : 0}%"></div>
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-0.5 font-medium">${fmtShort(s.paid)} / ${fmtShort(s.fees)} FCFA</p>
+                                    </div>
+                                    <i class="fas fa-chevron-right text-slate-300 text-sm"></i>
+                                </div>
+                            </div>
+                        `).join('')}
+                        
+                        ${filtered.length === 0 ? `
+                            <div class="text-center py-12 text-slate-400">
+                                <i class="fas fa-users text-4xl mx-auto mb-2 opacity-30"></i>
+                                <p class="font-semibold">Aucun élève trouvé</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderAvatar(initials, status) {
+            const colors = {
+                payé: 'bg-emerald-100 text-emerald-700',
+                partiel: 'bg-amber-100 text-amber-700',
+                impayé: 'bg-red-100 text-red-600'
+            };
+            const color = colors[status] || 'bg-blue-100 text-blue-700';
+            
+            return `
+                <div class="w-10 h-10 ${color} rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                    ${initials}
+                </div>
+            `;
+        }
+
+        function renderStatusBadge(status) {
+            const badges = {
+                payé: { label: 'Payé', class: 'bg-emerald-100 text-emerald-700 border border-emerald-200' },
+                partiel: { label: 'Partiel', class: 'bg-amber-100 text-amber-700 border border-amber-200' },
+                impayé: { label: 'Impayé', class: 'bg-red-100 text-red-700 border border-red-200' }
+            };
+            const badge = badges[status] || badges.impayé;
+            
+            return `
+                <span class="px-2 py-0.5 rounded-full text-xs font-semibold ${badge.class}">${badge.label}</span>
+            `;
+        }
+
+        function getProgressColor(status) {
+            return {
+                payé: 'bg-emerald-500',
+                partiel: 'bg-amber-500',
+                impayé: 'bg-red-400'
+            }[status] || 'bg-slate-400';
+        }
+
+        function selectStudent(id) {
+            selectedStudent = students.find(s => s.id === id);
+            renderStudentModal();
+        }
+
+        function renderStudentModal() {
+            if (!selectedStudent) return;
+            
+            const s = selectedStudent;
+            const rem = s.fees - s.paid;
+            
+            const modal = document.getElementById('modal-container');
+            modal.innerHTML = `
+                <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onclick="closeModal()">
+                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+                    <div class="relative bg-white w-full max-w-lg rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col animate-pop" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+                            <h3 class="font-bold text-slate-800 text-lg">Fiche élève</h3>
+                            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                                <i class="fas fa-times text-sm"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-y-auto flex-1 p-5">
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
+                                    ${renderAvatar(s.avatar, s.status)}
+                                    <div>
+                                        <h4 class="font-black text-slate-800 text-lg">${s.name}</h4>
+                                        <p class="text-slate-500 text-sm">${s.class} · ${s.id}</p>
+                                        ${renderStatusBadge(s.status)}
+                                    </div>
+                                </div>
+
+                                <!-- Export Buttons -->
+                                <div class="flex gap-2">
+                                    <button onclick="printStudentReceipt('${s.id}')" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-red-50 hover:border-red-200 hover:text-red-600 transition-all">
+                                        <i class="fas fa-print text-xs"></i> PDF Reçu
+                                    </button>
+                                    <button onclick="exportStudentCSV('${s.id}')" class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600 transition-all">
+                                        <i class="fas fa-file-excel text-xs"></i> Excel
+                                    </button>
+                                </div>
+
+                                <!-- Tabs -->
+                                <div class="flex gap-1 bg-slate-100 rounded-xl p-1">
+                                    <button onclick="switchStudentTab('info')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${document.getElementById('student-tab')?.value === 'info' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}">
+                                        Informations
+                                    </button>
+                                    <button onclick="switchStudentTab('paiement')" class="flex-1 py-2 rounded-lg text-sm font-semibold transition-all ${document.getElementById('student-tab')?.value === 'paiement' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}">
+                                        Paiement
+                                    </button>
+                                </div>
+                                <input type="hidden" id="student-tab" value="info">
+
+                                <div id="student-tab-content">
+                                    ${renderStudentTabContent()}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderStudentTabContent() {
+            const tab = document.getElementById('student-tab')?.value || 'info';
+            const s = selectedStudent;
+            const rem = s.fees - s.paid;
+            
+            if (tab === 'info') {
+                return `
+                    <div class="grid grid-cols-2 gap-3">
+                        ${[
+                            ['Parent', s.parent || '—'],
+                            ['Téléphone', s.phone || '—'],
+                            ['Frais totaux', fmt(s.fees)],
+                            ['Dernier paiement', s.lastPayment || 'Aucun']
+                        ].map(([k, v]) => `
+                            <div class="p-3 bg-slate-50 rounded-xl">
+                                <p class="text-xs text-slate-400 font-semibold">${k}</p>
+                                <p class="text-sm font-bold text-slate-700 mt-0.5">${v}</p>
+                            </div>
+                        `).join('')}
+                        
+                        <div class="col-span-2 p-3 bg-blue-50 rounded-xl border border-blue-100">
+                            <div class="flex justify-between text-sm mb-2">
+                                <span class="font-semibold text-blue-800">Progression</span>
+                                <span class="font-black text-blue-700">${Math.round(s.paid / s.fees * 100)}%</span>
+                            </div>
+                            <div class="bg-blue-100 rounded-full h-3 overflow-hidden">
+                                <div class="h-full bg-blue-600 rounded-full" style="width: ${Math.round(s.paid / s.fees * 100)}%"></div>
+                            </div>
+                            <div class="flex justify-between mt-2 text-xs text-blue-600 font-semibold">
+                                <span>Payé: ${fmt(s.paid)}</span>
+                                <span>Restant: ${fmt(rem)}</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                if (rem <= 0) {
+                    return `
+                        <div class="text-center py-8">
+                            <i class="fas fa-check-circle text-5xl text-emerald-500 mb-3"></i>
+                            <p class="font-bold text-emerald-700">Frais entièrement réglés</p>
+                        </div>
+                    `;
+                }
+                
+                return `
+                    <div class="space-y-3">
+                        <div class="p-3 bg-amber-50 rounded-xl border border-amber-100">
+                            <p class="text-xs text-amber-700 font-semibold">Montant restant</p>
+                            <p class="text-2xl font-black text-amber-700 mt-0.5">${fmt(rem)}</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Montant à encaisser (FCFA)</label>
+                            <input type="number" id="payment-amount" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="${rem}">
+                        </div>
+                        
+                        <div class="flex gap-2">
+                            ${[rem, Math.floor(rem / 2), 50000].filter(v => v > 0 && v <= rem).map(v => `
+                                <button onclick="document.getElementById('payment-amount').value = ${v}" class="flex-1 py-2 rounded-xl bg-slate-100 text-xs font-bold text-slate-600 hover:bg-slate-200">
+                                    ${fmtShort(v)}
+                                </button>
+                            `).join('')}
+                        </div>
+                        
+                        <button onclick="processPayment('${s.id}')" class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.97]">
+                            <i class="fas fa-check-circle text-xs"></i> Enregistrer le paiement
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        function switchStudentTab(tab) {
+            document.getElementById('student-tab').value = tab;
+            const content = document.getElementById('student-tab-content');
+            content.innerHTML = renderStudentTabContent();
+            
+            // Update tab buttons
+            const buttons = document.querySelectorAll('.flex.gap-1.bg-slate-100 button');
+            buttons.forEach((btn, index) => {
+                if ((index === 0 && tab === 'info') || (index === 1 && tab === 'paiement')) {
+                    btn.classList.add('bg-white', 'text-blue-600', 'shadow-sm');
+                    btn.classList.remove('text-slate-500');
+                } else {
+                    btn.classList.remove('bg-white', 'text-blue-600', 'shadow-sm');
+                    btn.classList.add('text-slate-500');
+                }
+            });
+        }
+
+        function processPayment(id) {
+            const amount = parseInt(document.getElementById('payment-amount')?.value);
+            if (!amount || amount <= 0) return;
+            
+            students = students.map(s => {
+                if (s.id !== id) return s;
+                const np = Math.min(s.paid + amount, s.fees);
+                return {
+                    ...s,
+                    paid: np,
+                    status: np >= s.fees ? 'payé' : np > 0 ? 'partiel' : 'impayé',
+                    lastPayment: today
+                };
+            });
+            
+            closeModal();
+            renderScreen();
+        }
+
+        function showAddStudentModal() {
+            showAddStudent = true;
+            newStudent = {name:'', class:'', parent:'', phone:'', fees:'', paid:''};
+            
+            const modal = document.getElementById('modal-container');
+            modal.innerHTML = `
+                <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onclick="closeModal()">
+                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+                    <div class="relative bg-white w-full max-w-lg rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col animate-pop" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+                            <h3 class="font-bold text-slate-800 text-lg">Nouvel élève</h3>
+                            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                                <i class="fas fa-times text-sm"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-y-auto flex-1 p-5">
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Nom complet *</label>
+                                    <input type="text" id="new-student-name" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Prénom Nom">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Classe *</label>
+                                    <select id="new-student-class" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <option value="">Sélectionner...</option>
+                                        ${['6ème A','6ème B','5ème A','5ème B','4ème A','4ème B','3ème A','3ème B'].map(c => `<option>${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Nom du parent</label>
+                                    <input type="text" id="new-student-parent" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Téléphone</label>
+                                    <input type="tel" id="new-student-phone" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="+221 77 000 0000">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Frais annuels (FCFA)</label>
+                                    <input type="number" id="new-student-fees" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="450000">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Montant versé (FCFA)</label>
+                                    <input type="number" id="new-student-paid" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="0">
+                                </div>
+                                
+                                <button onclick="addStudent()" class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.97]">
+                                    <i class="fas fa-user-plus text-xs"></i> Enregistrer
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function addStudent() {
+            const name = document.getElementById('new-student-name')?.value;
+            const className = document.getElementById('new-student-class')?.value;
+            if (!name || !className) return;
+            
+            const id = `EL${String(students.length + 1).padStart(3, '0')}`;
+            const paid = parseInt(document.getElementById('new-student-paid')?.value) || 0;
+            const fees = parseInt(document.getElementById('new-student-fees')?.value) || 0;
+            const status = paid >= fees && fees > 0 ? 'payé' : paid > 0 ? 'partiel' : 'impayé';
+            const avatar = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+            
+            students.push({
+                id,
+                name,
+                class: className,
+                parent: document.getElementById('new-student-parent')?.value || '',
+                phone: document.getElementById('new-student-phone')?.value || '',
+                fees,
+                paid,
+                status,
+                lastPayment: paid > 0 ? today : null,
+                present: true,
+                avatar
+            });
+            
+            closeModal();
+            renderScreen();
+        }
+
+        function printStudentReceipt(id) {
+            const s = students.find(s => s.id === id);
+            if (!s) return;
+            
+            const rem = s.fees - s.paid;
+            exportToPDF(`Reçu — ${s.name}`, ['Champ', 'Valeur'], [
+                ['Élève', s.name],
+                ['Classe', s.class],
+                ['Code', s.id],
+                ['Payé', fmt(s.paid)],
+                ['Total', fmt(s.fees)],
+                ['Restant', fmt(rem)],
+                ['Statut', s.status.toUpperCase()],
+                ['Date', s.lastPayment || '-']
+            ]);
+        }
+
+        function exportStudentCSV(id) {
+            const s = students.find(s => s.id === id);
+            if (!s) return;
+            
+            exportToCSV(['Champ', 'Valeur'], [
+                ['Élève', s.name],
+                ['Classe', s.class],
+                ['Payé', s.paid],
+                ['Total', s.fees],
+                ['Restant', s.fees - s.paid]
+            ], `recu_${s.id}`);
+        }
+
+        // ==================== PAYMENTS ====================
+        function renderPayments() {
+            const all = students.filter(s => s.lastPayment).sort((a, b) => b.lastPayment.localeCompare(a.lastPayment));
+            const filtered = all.filter(s => 
+                paymentSearch === '' || 
+                s.name.toLowerCase().includes(paymentSearch.toLowerCase()) || 
+                s.id.toLowerCase().includes(paymentSearch.toLowerCase())
+            );
+            
+            const totalPaid = students.reduce((sum, s) => sum + s.paid, 0);
+            const totalDue = students.reduce((sum, s) => sum + (s.fees - s.paid), 0);
+
+            return `
+                <div class="space-y-4">
+                    <!-- Stats -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white rounded-2xl border border-emerald-100 shadow-sm p-4 bg-gradient-to-br from-emerald-50 to-green-50">
+                            <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Encaissé</p>
+                            <p class="text-2xl font-black text-emerald-700 mt-1">${fmtShort(totalPaid)}</p>
+                            <p class="text-xs text-emerald-500 mt-0.5">FCFA collectés</p>
+                        </div>
+                        <div class="bg-white rounded-2xl border border-amber-100 shadow-sm p-4 bg-gradient-to-br from-amber-50 to-orange-50">
+                            <p class="text-xs font-semibold text-amber-600 uppercase tracking-wide">En attente</p>
+                            <p class="text-2xl font-black text-amber-700 mt-1">${fmtShort(totalDue)}</p>
+                            <p class="text-xs text-amber-500 mt-0.5">FCFA restants</p>
+                        </div>
+                    </div>
+
+                    <!-- Search and Export -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <div class="flex-1 min-w-0 relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                            <input 
+                                type="text" 
+                                class="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" 
+                                placeholder="Nom ou code..."
+                                value="${paymentSearch}"
+                                oninput="paymentSearch = this.value; renderScreen()"
+                            >
+                        </div>
+                        ${renderExportDropdown('payments')}
+                    </div>
+
+                    <!-- Payments List -->
+                    <div class="space-y-2">
+                        ${filtered.map(s => `
+                            <div onclick="selectReceipt('${s.id}')" class="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 cursor-pointer active:scale-[0.98] transition-transform card-hover">
+                                <div class="flex items-center gap-3">
+                                    ${renderAvatar(s.avatar, s.status)}
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-sm">${s.name}</p>
+                                        <p class="text-xs text-slate-400">${s.id} · ${s.class}</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-black text-emerald-600 text-sm">${fmtShort(s.paid)} FCFA</p>
+                                        <p class="text-xs text-slate-400">${s.lastPayment}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                        
+                        ${filtered.length === 0 ? `
+                            <div class="text-center py-12 text-slate-400">
+                                <i class="fas fa-credit-card text-4xl mx-auto mb-2 opacity-30"></i>
+                                <p class="font-semibold">Aucun paiement trouvé</p>
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function selectReceipt(id) {
+            selectedReceipt = students.find(s => s.id === id);
+            renderReceiptModal();
+        }
+
+        function renderReceiptModal() {
+            if (!selectedReceipt) return;
+            
+            const s = selectedReceipt;
+            
+            const modal = document.getElementById('modal-container');
+            modal.innerHTML = `
+                <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onclick="closeModal()">
+                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+                    <div class="relative bg-white w-full max-w-lg rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col animate-pop" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+                            <h3 class="font-bold text-slate-800 text-lg">Reçu de paiement</h3>
+                            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                                <i class="fas fa-times text-sm"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-y-auto flex-1 p-5">
+                            <div class="space-y-4">
+                                <div class="text-center p-4 bg-blue-50 rounded-2xl border-2 border-blue-100 border-dashed">
+                                    <i class="fas fa-graduation-cap text-3xl text-blue-600 mb-2"></i>
+                                    <h4 class="font-black text-blue-800 text-lg">${SCHOOL_NAME}</h4>
+                                    <p class="text-blue-500 text-sm">REÇU DE PAIEMENT — ${ACADEMIC_YEAR}</p>
+                                    <p class="text-xs text-blue-400 mt-1">N° RCP-${s.id}-${Date.now().toString().slice(-4)}</p>
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    ${[
+                                        ['Élève', s.name],
+                                        ['Classe', s.class],
+                                        ['Référence', s.id],
+                                        ['Montant payé', fmt(s.paid)],
+                                        ['Total frais', fmt(s.fees)],
+                                        ['Solde restant', fmt(s.fees - s.paid)],
+                                        ['Date', s.lastPayment],
+                                        ['Statut', s.status.toUpperCase()]
+                                    ].map(([k, v]) => `
+                                        <div class="flex justify-between py-2 border-b border-slate-50">
+                                            <span class="text-sm text-slate-500 font-medium">${k}</span>
+                                            <span class="text-sm font-bold ${k === 'Statut' ? (s.status === 'payé' ? 'text-emerald-600' : 'text-amber-600') : 'text-slate-800'}">${v}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                                
+                                <div class="flex gap-2">
+                                    <button onclick="printReceipt('${s.id}')" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-red-50 border border-red-100 text-sm font-semibold text-red-600 hover:bg-red-100 transition-all">
+                                        <i class="fas fa-print"></i> Imprimer PDF
+                                    </button>
+                                    <button onclick="exportReceiptCSV('${s.id}')" class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-50 border border-emerald-100 text-sm font-semibold text-emerald-600 hover:bg-emerald-100 transition-all">
+                                        <i class="fas fa-file-excel"></i> Excel/CSV
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function printReceipt(id) {
+            const s = students.find(s => s.id === id);
+            if (!s) return;
+            
+            exportToPDF(`Reçu ${s.name}`, ['Champ', 'Valeur'], [
+                ['Élève', s.name],
+                ['Classe', s.class],
+                ['Code', s.id],
+                ['Payé', fmt(s.paid)],
+                ['Total', fmt(s.fees)],
+                ['Restant', fmt(s.fees - s.paid)],
+                ['Statut', s.status]
+            ]);
+        }
+
+        function exportReceiptCSV(id) {
+            const s = students.find(s => s.id === id);
+            if (!s) return;
+            
+            exportToCSV(['Élève', 'Classe', 'Payé', 'Total'], [
+                [s.name, s.class, s.paid, s.fees]
+            ], `recu_${s.id}`);
+        }
+
+        // ==================== EXPENSES ====================
+        function renderExpenses() {
+            const filtered = expenses.filter(e => {
+                if (expenseFilters.category !== 'Toutes' && e.category !== expenseFilters.category) return false;
+                if (expenseFilters.status === 'Validées' && !e.validated) return false;
+                if (expenseFilters.status === 'En attente' && e.validated) return false;
+                if (expenseFilters.from && e.date < expenseFilters.from) return false;
+                if (expenseFilters.to && e.date > expenseFilters.to) return false;
+                if (expenseFilters.min && e.amount < parseInt(expenseFilters.min)) return false;
+                if (expenseFilters.max && e.amount > parseInt(expenseFilters.max)) return false;
+                return true;
+            });
+
+            const total = filtered.reduce((s, e) => s + e.amount, 0);
+            const validated = filtered.filter(e => e.validated).reduce((s, e) => s + e.amount, 0);
+            const activeCount = [
+                expenseFilters.category !== 'Toutes',
+                expenseFilters.status !== 'Tous',
+                expenseFilters.from,
+                expenseFilters.to,
+                expenseFilters.min,
+                expenseFilters.max
+            ].filter(Boolean).length;
+
+            const catColors = {
+                Salaires: 'bg-blue-50 text-blue-600',
+                Fournitures: 'bg-emerald-50 text-emerald-600',
+                Utilités: 'bg-amber-50 text-amber-600',
+                Maintenance: 'bg-violet-50 text-violet-600',
+                Autres: 'bg-slate-50 text-slate-400'
+            };
+
+            return `
+                <div class="space-y-4">
+                    <!-- Stats -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-white rounded-2xl border border-red-100 shadow-sm p-4 bg-gradient-to-br from-red-50 to-pink-50">
+                            <p class="text-xs font-semibold text-red-500 uppercase tracking-wide">Total filtré</p>
+                            <p class="text-2xl font-black text-red-600 mt-1">${fmtShort(total)}</p>
+                            <p class="text-xs text-red-400 mt-0.5">${filtered.length} dépense(s)</p>
+                        </div>
+                        <div class="bg-white rounded-2xl border border-emerald-100 shadow-sm p-4 bg-gradient-to-br from-emerald-50 to-green-50">
+                            <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Validées</p>
+                            <p class="text-2xl font-black text-emerald-700 mt-1">${fmtShort(validated)}</p>
+                            <p class="text-xs text-emerald-500 mt-0.5">${filtered.filter(e => e.validated).length}/${filtered.length}</p>
+                        </div>
+                    </div>
+
+                    <!-- Toolbar -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="toggleFilters()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl border text-sm font-semibold transition-all ${activeCount > 0 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'}">
+                            <i class="fas fa-sliders-h text-xs"></i>
+                            Filtres ${activeCount > 0 ? `<span class="w-5 h-5 rounded-full text-xs flex items-center justify-center font-bold ${activeCount > 0 ? 'bg-white/30 text-white' : 'bg-blue-100 text-blue-600'}">${activeCount}</span>` : ''}
+                        </button>
+                        <div class="flex-1"></div>
+                        <button onclick="alert('Import - À implémenter')" class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all">
+                            <i class="fas fa-upload text-xs"></i> Importer
+                        </button>
+                        ${renderExportDropdown('expenses')}
+                        <button onclick="showAddExpenseModal()" class="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.97]">
+                            <i class="fas fa-plus text-xs"></i> Ajouter
+                        </button>
+                    </div>
+
+                    <!-- Filter Panel -->
+                    ${showFilters ? renderFilterPanel() : ''}
+
+                    <!-- Expenses List -->
+                    <div class="space-y-2">
+                        ${filtered.map(exp => renderExpenseRow(exp, catColors)).join('')}
+                        
+                        ${filtered.length === 0 ? `
+                            <div class="text-center py-12 text-slate-400">
+                                <i class="fas fa-wallet text-4xl mx-auto mb-2 opacity-30"></i>
+                                <p class="font-semibold">Aucune dépense trouvée</p>
+                                ${activeCount > 0 ? `
+                                    <button onclick="resetFilters()" class="mt-2 text-xs text-blue-600 font-semibold hover:underline">
+                                        Effacer les filtres
+                                    </button>
+                                ` : ''}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderFilterPanel() {
+            return `
+                <div class="bg-white rounded-2xl border border-blue-100 shadow-sm animate-pop overflow-hidden">
+                    <div class="flex items-center justify-between px-4 py-3 bg-blue-50 border-b border-blue-100">
+                        <span class="font-bold text-blue-800 flex items-center gap-2 text-sm">
+                            <i class="fas fa-sliders-h text-xs"></i> Filtres avancés
+                        </span>
+                        <button onclick="resetFilters()" class="flex items-center gap-1 text-xs text-red-500 font-semibold hover:underline">
+                            <i class="fas fa-sync-alt text-[10px]"></i> Réinitialiser
+                        </button>
+                    </div>
+                    <div class="p-4 space-y-4">
+                        <!-- Category -->
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Catégorie</p>
+                            <div class="flex flex-wrap gap-1.5">
+                                ${['Toutes', 'Salaires', 'Fournitures', 'Utilités', 'Maintenance', 'Autres'].map(c => `
+                                    <button onclick="setFilterCategory('${c}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all ${expenseFilters.category === c ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300 hover:text-blue-600'}">
+                                        ${c}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Status -->
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Statut de validation</p>
+                            <div class="flex gap-1.5">
+                                ${['Tous', 'Validées', 'En attente'].map(s => `
+                                    <button onclick="setFilterStatus('${s}')" class="flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all ${expenseFilters.status === s ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-slate-200 text-slate-600'}">
+                                        ${s}
+                                    </button>
+                                `).join('')}
+                            </div>
+                        </div>
+                        
+                        <!-- Date Range -->
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Période</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-xs text-slate-500 mb-1 block">Du</label>
+                                    <input type="date" value="${expenseFilters.from}" onchange="setFilterFrom(this.value)" class="w-full px-2.5 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-500 mb-1 block">Au</label>
+                                    <input type="date" value="${expenseFilters.to}" onchange="setFilterTo(this.value)" class="w-full px-2.5 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Amount Range -->
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Montant (FCFA)</p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>
+                                    <label class="text-xs text-slate-500 mb-1 block">Minimum</label>
+                                    <input type="number" placeholder="0" value="${expenseFilters.min}" onchange="setFilterMin(this.value)" class="w-full px-2.5 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                </div>
+                                <div>
+                                    <label class="text-xs text-slate-500 mb-1 block">Maximum</label>
+                                    <input type="number" placeholder="∞" value="${expenseFilters.max}" onchange="setFilterMax(this.value)" class="w-full px-2.5 py-2 rounded-xl border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-blue-400">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="pt-1 border-t border-slate-100 flex items-center justify-between">
+                            <span class="text-xs text-slate-500 font-medium">
+                                <span class="font-bold text-slate-700">${expenses.filter(e => {
+                                    if (expenseFilters.category !== 'Toutes' && e.category !== expenseFilters.category) return false;
+                                    if (expenseFilters.status === 'Validées' && !e.validated) return false;
+                                    if (expenseFilters.status === 'En attente' && e.validated) return false;
+                                    if (expenseFilters.from && e.date < expenseFilters.from) return false;
+                                    if (expenseFilters.to && e.date > expenseFilters.to) return false;
+                                    if (expenseFilters.min && e.amount < parseInt(expenseFilters.min)) return false;
+                                    if (expenseFilters.max && e.amount > parseInt(expenseFilters.max)) return false;
+                                    return true;
+                                }).length}</span> résultat(s) · Total: <span class="font-bold text-red-600">${fmtShort(expenses.filter(e => {
+                                    if (expenseFilters.category !== 'Toutes' && e.category !== expenseFilters.category) return false;
+                                    if (expenseFilters.status === 'Validées' && !e.validated) return false;
+                                    if (expenseFilters.status === 'En attente' && e.validated) return false;
+                                    if (expenseFilters.from && e.date < expenseFilters.from) return false;
+                                    if (expenseFilters.to && e.date > expenseFilters.to) return false;
+                                    if (expenseFilters.min && e.amount < parseInt(expenseFilters.min)) return false;
+                                    if (expenseFilters.max && e.amount > parseInt(expenseFilters.max)) return false;
+                                    return true;
+                                }).reduce((s, e) => s + e.amount, 0))} FCFA</span>
+                            </span>
+                            <button onclick="toggleFilters()" class="text-xs text-blue-600 font-semibold hover:underline">
+                                Fermer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderExpenseRow(exp, catColors) {
+            return `
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-3">
+                    <div class="flex items-start gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${catColors[exp.category] || 'bg-slate-50 text-slate-400'}">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex-1 min-w-0">
+                                    <p class="font-bold text-slate-800 text-sm truncate">${exp.description}</p>
+                                    <p class="text-xs text-slate-400">${exp.category} · ${exp.date}</p>
+                                </div>
+                                <div class="flex flex-col items-end gap-1 flex-shrink-0">
+                                    <p class="font-black text-slate-700 text-sm">${fmtShort(exp.amount)} FCFA</p>
+                                    <button onclick="toggleExpenseValidation('${exp.id}')" class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${exp.validated ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}">
+                                        <i class="fas ${exp.validated ? 'fa-check-circle' : 'fa-clock'} text-[10px]"></i> ${exp.validated ? 'Validé' : 'En attente'}
+                                    </button>
+                                </div>
+                            </div>
+                            <!-- Attachments -->
+                            <div class="mt-2 flex items-center gap-3">
+                                ${(exp.attachments || []).length > 0 ? `
+                                    <button onclick="toggleExpenseAttachments('${exp.id}')" class="flex items-center gap-1 text-xs text-blue-600 font-semibold">
+                                        <i class="fas fa-paperclip text-[10px]"></i> ${exp.attachments.length} fichier(s)
+                                    </button>
+                                ` : ''}
+                                <button onclick="addAttachment('${exp.id}')" class="flex items-center gap-1 text-xs text-slate-400 hover:text-blue-500 font-medium transition-colors">
+                                    <i class="fas fa-paperclip text-[10px]"></i> Joindre fichier
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleFilters() {
+            showFilters = !showFilters;
+            renderScreen();
+        }
+
+        function setFilterCategory(cat) {
+            expenseFilters.category = cat;
+            renderScreen();
+        }
+
+        function setFilterStatus(status) {
+            expenseFilters.status = status;
+            renderScreen();
+        }
+
+        function setFilterFrom(value) {
+            expenseFilters.from = value;
+            renderScreen();
+        }
+
+        function setFilterTo(value) {
+            expenseFilters.to = value;
+            renderScreen();
+        }
+
+        function setFilterMin(value) {
+            expenseFilters.min = value;
+            renderScreen();
+        }
+
+        function setFilterMax(value) {
+            expenseFilters.max = value;
+            renderScreen();
+        }
+
+        function resetFilters() {
+            expenseFilters = {
+                category: 'Toutes',
+                status: 'Tous',
+                from: '',
+                to: '',
+                min: '',
+                max: ''
+            };
+            renderScreen();
+        }
+
+        function toggleExpenseValidation(id) {
+            expenses = expenses.map(e => e.id === id ? {...e, validated: !e.validated} : e);
+            renderScreen();
+        }
+
+        function showAddExpenseModal() {
+            showAddExpense = true;
+            newExpense = {date: today, category: 'Salaires', description: '', amount: ''};
+            attachFile = null;
+            
+            const modal = document.getElementById('modal-container');
+            modal.innerHTML = `
+                <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center" onclick="closeModal()">
+                    <div class="absolute inset-0 bg-black/40 backdrop-blur-sm"></div>
+                    <div class="relative bg-white w-full max-w-lg rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col animate-pop" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 flex-shrink-0">
+                            <h3 class="font-bold text-slate-800 text-lg">Nouvelle dépense</h3>
+                            <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200">
+                                <i class="fas fa-times text-sm"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-y-auto flex-1 p-5">
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Date</label>
+                                    <input type="date" id="new-expense-date" value="${newExpense.date}" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Catégorie</label>
+                                    <select id="new-expense-category" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        ${['Salaires','Fournitures','Utilités','Maintenance','Autres'].map(c => `<option ${newExpense.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Description</label>
+                                    <input type="text" id="new-expense-description" value="${newExpense.description}" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Détail de la dépense...">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Montant (FCFA)</label>
+                                    <input type="number" id="new-expense-amount" value="${newExpense.amount}" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="150000">
+                                </div>
+                                
+                                <!-- File Attachment -->
+                                <div>
+                                    <label class="block text-sm font-semibold text-slate-700 mb-1">Pièce jointe <span class="text-slate-400 font-normal">(facultatif)</span></label>
+                                    <input type="file" id="expense-attachment" class="hidden" accept=".pdf,.xlsx,.xls,.csv,.jpg,.jpeg,.png" onchange="handleFileSelect(this)">
+                                    <div id="attachment-preview" class="${attachFile ? '' : 'hidden'}">
+                                        <div class="flex items-center gap-2 p-2.5 bg-blue-50 rounded-xl border border-blue-100">
+                                            <i class="fas fa-paperclip text-blue-500 text-xs"></i>
+                                            <span class="text-xs font-semibold text-blue-700 flex-1 truncate">${attachFile ? attachFile.name : ''}</span>
+                                            <span class="text-xs text-slate-400">${attachFile ? Math.round(attachFile.size / 1024) + 'Ko' : ''}</span>
+                                            <button onclick="removeAttachment()" class="text-slate-400 hover:text-red-500 ml-1">
+                                                <i class="fas fa-times text-xs"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button onclick="document.getElementById('expense-attachment').click()" class="w-full flex items-center justify-center gap-2 p-3 border-2 border-dashed border-slate-200 rounded-xl text-sm text-slate-400 hover:border-blue-300 hover:text-blue-500 transition-colors">
+                                        <i class="fas fa-upload"></i> Joindre PDF / Excel / Image
+                                    </button>
+                                </div>
+                                
+                                <button onclick="addExpense()" class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.97]">
+                                    <i class="fas fa-plus text-xs"></i> Enregistrer la dépense
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleFileSelect(input) {
+            if (input.files && input.files[0]) {
+                attachFile = input.files[0];
+                const preview = document.getElementById('attachment-preview');
+                const previewName = preview.querySelector('.text-blue-700');
+                const previewSize = preview.querySelector('.text-slate-400');
+                if (previewName) previewName.textContent = attachFile.name;
+                if (previewSize) previewSize.textContent = Math.round(attachFile.size / 1024) + 'Ko';
+                preview.classList.remove('hidden');
+            }
+        }
+
+        function removeAttachment() {
+            attachFile = null;
+            document.getElementById('attachment-preview')?.classList.add('hidden');
+            document.getElementById('expense-attachment').value = '';
+        }
+
+        function addExpense() {
+            const desc = document.getElementById('new-expense-description')?.value;
+            const amount = parseInt(document.getElementById('new-expense-amount')?.value);
+            if (!desc || !amount) return;
+            
+            const id = `DEP${String(expenses.length + 1).padStart(3, '0')}`;
+            const att = attachFile ? [{name: attachFile.name, size: attachFile.size, type: attachFile.type}] : [];
+            
+            expenses.unshift({
+                id,
+                date: document.getElementById('new-expense-date')?.value || today,
+                category: document.getElementById('new-expense-category')?.value || 'Salaires',
+                description: desc,
+                amount,
+                validated: false,
+                attachments: att
+            });
+            
+            closeModal();
+            renderScreen();
+        }
+
+        // ==================== PAYROLL ====================
+        function renderPayroll() {
+            const total = staff.reduce((s, e) => s + e.salary, 0);
+            const paid = staff.filter(s => s.paid).reduce((s, e) => s + e.salary, 0);
+
+            return `
+                <div class="space-y-4">
+                    <!-- Header -->
+                    <div class="bg-gradient-to-r from-violet-600 to-purple-700 rounded-2xl p-5 text-white">
+                        <p class="text-violet-200 text-xs font-semibold uppercase tracking-wide">Masse salariale — Février 2025</p>
+                        <p class="text-3xl font-black mt-1">${fmtShort(total)} <span class="text-xl text-violet-300">FCFA</span></p>
+                        <div class="mt-3 flex items-center justify-between text-sm">
+                            <span class="text-violet-200">Payé: <strong class="text-white">${fmtShort(paid)}</strong></span>
+                            <span class="text-violet-200">Restant: <strong class="text-white">${fmtShort(total - paid)}</strong></span>
+                        </div>
+                        <div class="mt-2 bg-violet-900/40 rounded-full h-2">
+                            <div class="h-full bg-white rounded-full" style="width: ${Math.round(paid / total * 100)}%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Export -->
+                    <div class="flex justify-end">
+                        ${renderExportDropdown('payroll')}
+                    </div>
+
+                    <!-- Staff List -->
+                    <div class="space-y-2">
+                        ${staff.map(s => `
+                            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 bg-violet-100 text-violet-700 rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                                        ${s.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase()}
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-sm">${s.name}</p>
+                                        <p class="text-xs text-slate-400">${s.role}</p>
+                                    </div>
+                                    <div class="text-right flex flex-col items-end gap-1">
+                                        <p class="font-black text-slate-700 text-sm">${fmtShort(s.salary)} FCFA</p>
+                                        <button onclick="toggleStaffPayment('${s.id}')" class="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold transition-all ${s.paid ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">
+                                            <i class="fas ${s.paid ? 'fa-check-circle' : 'fa-clock'} text-[10px]"></i> ${s.paid ? 'Payé' : 'En attente'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleStaffPayment(id) {
+            staff = staff.map(s => s.id === id ? {...s, paid: !s.paid} : s);
+            renderScreen();
+        }
+
+        // ==================== ATTENDANCE ====================
+        function renderAttendance() {
+            const classes = ['tous', ...new Set(students.map(s => s.class))];
+            const list = attendanceFilter === 'tous' ? students : students.filter(s => s.class === attendanceFilter);
+            const presentCount = list.filter(s => s.present).length;
+            const pct = list.length > 0 ? Math.round((presentCount / list.length) * 100) : 0;
+
+            return `
+                <div class="space-y-4">
+                    <!-- Stats -->
+                    <div class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-4 bg-gradient-to-r from-indigo-50 to-blue-50">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-xs font-semibold text-indigo-500 uppercase tracking-wide">Taux de présence</p>
+                                <p class="text-3xl font-black text-indigo-700 mt-0.5">${pct}%</p>
+                                <p class="text-xs text-indigo-400 mt-0.5">${presentCount}/${list.length} présents · ${today}</p>
+                            </div>
+                            <div class="relative w-16 h-16">
+                                <svg class="transform -rotate-90" viewBox="0 0 36 36">
+                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#e0e7ff" stroke-width="3"/>
+                                    <circle cx="18" cy="18" r="15.9" fill="none" stroke="#4f46e5" stroke-width="3" stroke-dasharray="${pct} ${100-pct}" stroke-linecap="round"/>
+                                </svg>
+                                <span class="absolute inset-0 flex items-center justify-center text-sm font-black text-indigo-700">${pct}%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Class Filter and Export -->
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <div class="flex gap-2 overflow-x-auto pb-1 flex-1">
+                            ${classes.map(c => `
+                                <button onclick="setAttendanceFilter('${c}')" class="px-3 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${attendanceFilter === c ? 'bg-blue-600 text-white' : 'bg-white border border-slate-200 text-slate-600'}">
+                                    ${c}
+                                </button>
+                            `).join('')}
+                        </div>
+                        <button onclick="exportAttendancePDF()" class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-700 hover:bg-red-50 hover:text-red-600 transition-all">
+                            <i class="fas fa-print text-xs"></i> PDF
+                        </button>
+                    </div>
+
+                    <!-- Attendance List -->
+                    <div class="space-y-2">
+                        ${list.map(s => `
+                            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 ${s.present ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-600'} rounded-full flex items-center justify-center font-bold flex-shrink-0 text-sm">
+                                        ${s.avatar}
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-sm">${s.name}</p>
+                                        <p class="text-xs text-slate-400">${s.class}</p>
+                                    </div>
+                                    <button onclick="toggleAttendance('${s.id}')" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-bold transition-all ${s.present ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'}">
+                                        <i class="fas ${s.present ? 'fa-user-check' : 'fa-times-circle'}"></i> ${s.present ? 'Présent' : 'Absent'}
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function setAttendanceFilter(filter) {
+            attendanceFilter = filter;
+            renderScreen();
+        }
+
+        function toggleAttendance(id) {
+            students = students.map(s => s.id === id ? {...s, present: !s.present} : s);
+            renderScreen();
+        }
+
+        function exportAttendancePDF() {
+            const list = attendanceFilter === 'tous' ? students : students.filter(s => s.class === attendanceFilter);
+            exportToPDF("Feuille d'appel — " + today, ["Nom", "Classe", "Présence"], 
+                list.map(s => [s.name, s.class, s.present ? "Présent" : "Absent"])
+            );
+        }
+
+        // ==================== CALENDAR ====================
+        function renderCalendar() {
+            const daysInMonth = new Date(2025, calendarMonth + 1, 0).getDate();
+            const firstDay = new Date(2025, calendarMonth, 1).getDay();
+            const cells = Array.from({length: firstDay === 0 ? 6 : firstDay - 1}).fill(null);
+
+            const evts = (d) => {
+                const ds = `2025-${String(calendarMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                return calendarEvents.filter(e => e.date === ds);
+            };
+
+            const isToday = (d) => {
+                const todayDate = new Date();
+                return d === todayDate.getDate() && calendarMonth === todayDate.getMonth();
+            };
+
+            return `
+                <div class="space-y-4">
+                    <!-- Calendar Card -->
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <button onclick="changeMonth(-1)" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                                <i class="fas fa-chevron-left text-slate-600 text-sm"></i>
+                            </button>
+                            <h3 class="font-bold text-slate-800">${MONTHS[calendarMonth]} 2025</h3>
+                            <button onclick="changeMonth(1)" class="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center">
+                                <i class="fas fa-chevron-right text-slate-600 text-sm"></i>
+                            </button>
+                        </div>
+
+                        <!-- Weekdays -->
+                        <div class="grid grid-cols-7 mb-2">
+                            ${["Lu","Ma","Me","Je","Ve","Sa","Di"].map(d => `
+                                <div class="text-center text-xs font-bold text-slate-400 py-1">${d}</div>
+                            `).join('')}
+                        </div>
+
+                        <!-- Days -->
+                        <div class="grid grid-cols-7 gap-0.5">
+                            ${cells.map((_, i) => `<div key="e${i}"></div>`).join('')}
+                            ${Array.from({length: daysInMonth}, (_, i) => i + 1).map(d => {
+                                const es = evts(d);
+                                const isT = isToday(d);
+                                return `
+                                    <button class="aspect-square rounded-xl flex flex-col items-center justify-center text-sm font-semibold ${isT ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'hover:bg-slate-50 text-slate-700'}">
+                                        ${d}
+                                        ${es.length > 0 ? `
+                                            <div class="flex gap-0.5 mt-0.5">
+                                                ${es.slice(0, 2).map(e => `
+                                                    <div class="w-1 h-1 rounded-full" style="background-color: ${e.color}"></div>
+                                                `).join('')}
+                                            </div>
+                                        ` : ''}
+                                    </button>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+
+                    <!-- Upcoming Events -->
+                    <div class="space-y-2">
+                        <h3 class="font-bold text-slate-700">Événements à venir</h3>
+                        ${calendarEvents.map(evt => `
+                            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background-color: ${evt.color}15">
+                                        <i class="fas fa-calendar-alt" style="color: ${evt.color}"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="font-bold text-slate-800 text-sm">${evt.title}</p>
+                                        <p class="text-xs text-slate-400">${evt.date}</p>
+                                    </div>
+                                    <span class="px-2 py-0.5 rounded-full text-xs font-semibold border" style="color: ${evt.color}; background-color: ${evt.color}15; border-color: ${evt.color}30">
+                                        ${evt.type}
+                                    </span>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function changeMonth(delta) {
+            calendarMonth = Math.max(0, Math.min(11, calendarMonth + delta));
+            renderScreen();
+        }
+
+        // ==================== NOTIFICATIONS ====================
+        function renderNotifications() {
+            const unreadCount = notifications.filter(n => !n.read).length;
+
+            const icons = {
+                warning: '<i class="fas fa-exclamation-triangle text-amber-500"></i>',
+                success: '<i class="fas fa-check-circle text-emerald-500"></i>',
+                info: '<i class="fas fa-bell text-blue-500"></i>',
+                danger: '<i class="fas fa-times-circle text-red-500"></i>'
+            };
+
+            return `
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <p class="text-sm text-slate-400">${unreadCount} non lue${unreadCount > 1 ? 's' : ''}</p>
+                        ${unreadCount > 0 ? `
+                            <button onclick="markAllRead()" class="px-3 py-1.5 hover:bg-slate-100 text-slate-600 text-sm font-semibold rounded-xl transition-all">
+                                Tout marquer lu
+                            </button>
+                        ` : ''}
+                    </div>
+
+                    <div class="space-y-2">
+                        ${notifications.map(n => `
+                            <div onclick="markAsRead(${n.id})" class="bg-white rounded-2xl border ${!n.read ? 'border-blue-100 bg-blue-50/30' : 'border-slate-100'} shadow-sm p-3 cursor-pointer">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                        n.type === 'warning' ? 'bg-amber-50' : 
+                                        n.type === 'success' ? 'bg-emerald-50' : 
+                                        n.type === 'danger' ? 'bg-red-50' : 'bg-blue-50'
+                                    }">
+                                        ${icons[n.type]}
+                                    </div>
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-bold text-slate-800 text-sm">${n.title}</p>
+                                            ${!n.read ? '<div class="w-2 h-2 rounded-full bg-blue-500"></div>' : ''}
+                                        </div>
+                                        <p class="text-xs text-slate-500 mt-0.5">${n.msg}</p>
+                                        <p class="text-xs text-slate-400 mt-1">${n.time}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function markAsRead(id) {
+            notifications = notifications.map(n => n.id === id ? {...n, read: true} : n);
+            renderScreen();
+        }
+
+        function markAllRead() {
+            notifications = notifications.map(n => ({...n, read: true}));
+            renderScreen();
+        }
+
+        // ==================== SMART IMPORT ====================
+        function renderSmartImport() {
+            const examples = {
+                students: "Oumar Seck, 4ème A, parent: Awa Seck, tél: 77 456 7890, frais: 420 000, versé: 210 000\nBinta Fall, 3ème B, Malick Fall, 76-234-5678, scolarité 450 000 payé 450 000",
+                expenses: "05/02/2025 - Matériel informatique 4 ordinateurs - 1 800 000 FCFA\n08/02/2025 - Eau SONES facture mensuelle 95 000"
+            };
+
+            return `
+                <div class="space-y-4">
+                    <!-- Header -->
+                    <div class="bg-white rounded-2xl border border-indigo-100 shadow-sm p-4 bg-gradient-to-r from-indigo-50 to-purple-50">
+                        <div class="flex items-start gap-3">
+                            <div class="w-10 h-10 bg-indigo-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                                <i class="fas fa-brain text-indigo-600 text-lg"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-black text-indigo-800">Smart Import IA</h3>
+                                <p class="text-xs text-indigo-500 mt-0.5">Collez n'importe quel texte brut — l'IA extrait et structure les données automatiquement.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mode Selector -->
+                    <div class="flex gap-2 bg-slate-100 p-1 rounded-xl">
+                        <button onclick="setImportMode('students')" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all ${document.getElementById('import-mode')?.value === 'students' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}">
+                            👥 Élèves
+                        </button>
+                        <button onclick="setImportMode('expenses')" class="flex-1 py-2 rounded-lg text-sm font-bold transition-all ${document.getElementById('import-mode')?.value === 'expenses' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500'}">
+                            💸 Dépenses
+                        </button>
+                    </div>
+                    <input type="hidden" id="import-mode" value="students">
+
+                    <!-- Text Input -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">Texte brut</label>
+                        <textarea id="import-text" class="w-full h-36 px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-sm text-slate-800 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Exemple:${examples[document.getElementById('import-mode')?.value || 'students']}"></textarea>
+                        <button onclick="loadExample()" class="mt-1 text-xs text-blue-600 font-semibold hover:underline">
+                            Utiliser l'exemple
+                        </button>
+                    </div>
+
+                    <!-- Analyze Button -->
+                    <button onclick="analyzeText()" class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.97]">
+                        <i class="fas fa-brain text-xs"></i> Analyser avec l'IA
+                    </button>
+
+                    <!-- Result Preview -->
+                    <div id="import-result" class="hidden">
+                        <!-- Will be filled by JavaScript -->
+                    </div>
+                </div>
+            `;
+        }
+
+        function setImportMode(mode) {
+            document.getElementById('import-mode').value = mode;
+            renderScreen();
+        }
+
+        function loadExample() {
+            const mode = document.getElementById('import-mode')?.value || 'students';
+            const examples = {
+                students: "Oumar Seck, 4ème A, parent: Awa Seck, tél: 77 456 7890, frais: 420 000, versé: 210 000\nBinta Fall, 3ème B, Malick Fall, 76-234-5678, scolarité 450 000 payé 450 000",
+                expenses: "05/02/2025 - Matériel informatique 4 ordinateurs - 1 800 000 FCFA\n08/02/2025 - Eau SONES facture mensuelle 95 000"
+            };
+            document.getElementById('import-text').value = examples[mode];
+        }
+
+        function analyzeText() {
+            const text = document.getElementById('import-text')?.value;
+            if (!text || !text.trim()) return;
+            
+            // Simulation d'analyse IA (dans une vraie app, appel API)
+            const mode = document.getElementById('import-mode')?.value;
+            
+            let result;
+            if (mode === 'students') {
+                result = {
+                    students: [
+                        {name: "Oumar Seck", class: "4ème A", parent: "Awa Seck", phone: "77 456 7890", fees: 420000, paid: 210000},
+                        {name: "Binta Fall", class: "3ème B", parent: "Malick Fall", phone: "76-234-5678", fees: 450000, paid: 450000}
+                    ]
+                };
+            } else {
+                result = {
+                    expenses: [
+                        {date: "2025-02-05", category: "Fournitures", description: "Matériel informatique 4 ordinateurs", amount: 1800000},
+                        {date: "2025-02-08", category: "Utilités", description: "Eau SONES facture mensuelle", amount: 95000}
+                    ]
+                };
+            }
+            
+            showImportResult(result);
+        }
+
+        function showImportResult(result) {
+            const mode = document.getElementById('import-mode')?.value;
+            const resultDiv = document.getElementById('import-result');
+            
+            let html = `
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 animate-pop">
+                    <div class="flex items-center gap-2 mb-3">
+                        <i class="fas fa-check-circle text-emerald-500"></i>
+                        <h4 class="font-bold text-slate-800">${mode === 'students' ? result.students?.length || 0 : result.expenses?.length || 0} élément(s) détecté(s)</h4>
+                    </div>
+                    
+                    <div class="space-y-2 max-h-48 overflow-y-auto mb-4">
+            `;
+            
+            if (mode === 'students' && result.students) {
+                result.students.forEach(s => {
+                    html += `
+                        <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl">
+                            <div>
+                                <p class="text-sm font-bold text-slate-700">${s.name}</p>
+                                <p class="text-xs text-slate-400">${s.class}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-xs font-bold text-slate-600">${fmtShort(s.fees)} FCFA</p>
+                                <p class="text-xs text-emerald-500">Payé: ${fmtShort(s.paid)}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else if (mode === 'expenses' && result.expenses) {
+                result.expenses.forEach(e => {
+                    html += `
+                        <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl">
+                            <div>
+                                <p class="text-sm font-bold text-slate-700">${e.description}</p>
+                                <p class="text-xs text-slate-400">${e.category} · ${e.date}</p>
+                            </div>
+                            <p class="text-sm font-black text-red-600">${fmtShort(e.amount)} FCFA</p>
+                        </div>
+                    `;
+                });
+            }
+            
+            html += `
+                    </div>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="closeImportResult()" class="flex-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl transition-all">
+                            Annuler
+                        </button>
+                        <button onclick="confirmImport()" class="flex-1 inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-xl transition-all">
+                            <i class="fas fa-download text-xs"></i> Importer
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            resultDiv.innerHTML = html;
+            resultDiv.classList.remove('hidden');
+            
+            // Store result for confirmation
+            window.lastImportResult = result;
+        }
+
+        function closeImportResult() {
+            document.getElementById('import-result').classList.add('hidden');
+            window.lastImportResult = null;
+        }
+
+        function confirmImport() {
+            const result = window.lastImportResult;
+            const mode = document.getElementById('import-mode')?.value;
+            
+            if (!result) return;
+            
+            if (mode === 'students' && result.students) {
+                const newStudents = result.students.map((s, i) => {
+                    const paid = s.paid || 0;
+                    const fees = s.fees || 0;
+                    const status = paid >= fees && fees > 0 ? 'payé' : paid > 0 ? 'partiel' : 'impayé';
+                    const avatar = s.name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+                    return {
+                        ...s,
+                        id: `EL${String(students.length + i + 1).padStart(3, '0')}`,
+                        paid,
+                        fees,
+                        status,
+                        lastPayment: paid > 0 ? today : null,
+                        present: true,
+                        avatar
+                    };
+                });
+                students = [...students, ...newStudents];
+            } else if (mode === 'expenses' && result.expenses) {
+                const newExpenses = result.expenses.map((e, i) => ({
+                    ...e,
+                    id: `DEP${String(expenses.length + i + 1).padStart(3, '0')}`,
+                    validated: false,
+                    attachments: []
+                }));
+                expenses = [...newExpenses, ...expenses];
+            }
+            
+            closeImportResult();
+            renderScreen();
+        }
+
+        // ==================== PARENT PORTAL ====================
+        function renderParentPortal() {
+            return `
+                <div class="space-y-4">
+                    <!-- Header -->
+                    <div class="bg-white rounded-2xl border border-teal-100 shadow-sm p-4 bg-gradient-to-r from-teal-50 to-cyan-50">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 bg-teal-100 rounded-xl flex items-center justify-center">
+                                <i class="fas fa-home text-teal-600"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-black text-teal-800">Espace Parent</h3>
+                                <p class="text-xs text-teal-500">Consultez les informations de votre enfant</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Search -->
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1">Code élève ou nom</label>
+                            <input type="text" id="parent-search" class="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Ex: EL001 ou Aminata Diallo" onkeydown="if(event.key==='Enter') searchStudent()">
+                        </div>
+                        <button onclick="searchStudent()" class="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all active:scale-[0.97]">
+                            <i class="fas fa-search text-xs"></i> Rechercher
+                        </button>
+                    </div>
+
+                    <!-- Results -->
+                    <div id="parent-result"></div>
+                </div>
+            `;
+        }
+
+        function searchStudent() {
+            const query = document.getElementById('parent-search')?.value;
+            if (!query) return;
+            
+            const found = students.find(s => 
+                s.id.toLowerCase() === query.trim().toLowerCase() || 
+                s.name.toLowerCase().includes(query.trim().toLowerCase())
+            );
+            
+            const resultDiv = document.getElementById('parent-result');
+            
+            if (!found) {
+                resultDiv.innerHTML = `
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 text-center">
+                        <i class="fas fa-search text-4xl text-slate-300 mb-2"></i>
+                        <p class="font-bold text-slate-600">Aucun élève trouvé</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const rem = found.fees - found.paid;
+            
+            resultDiv.innerHTML = `
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-4 animate-pop">
+                    <div class="flex items-center gap-3 mb-4">
+                        ${renderAvatar(found.avatar, found.status)}
+                        <div>
+                            <h4 class="font-black text-slate-800">${found.name}</h4>
+                            <p class="text-sm text-slate-500">${found.class} · ${found.id}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="p-3 bg-slate-50 rounded-xl mb-3">
+                        ${[
+                            ['Frais totaux', fmt(found.fees)],
+                            ['Montant payé', fmt(found.paid)],
+                            ['Solde restant', fmt(rem)]
+                        ].map(([k, v]) => `
+                            <div class="flex justify-between mb-1.5 text-sm">
+                                <span class="text-slate-600">${k}</span>
+                                <span class="font-bold ${k === 'Solde restant' && rem > 0 ? 'text-red-500' : k === 'Montant payé' ? 'text-emerald-600' : 'text-slate-800'}">${v}</span>
+                            </div>
+                        `).join('')}
+                        
+                        <div class="mt-3 bg-slate-200 rounded-full h-2">
+                            <div class="h-full rounded-full ${found.status === 'payé' ? 'bg-emerald-500' : found.status === 'partiel' ? 'bg-amber-500' : 'bg-red-400'}" 
+                                 style="width: ${Math.round(found.paid / found.fees * 100)}%">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="p-3 bg-slate-50 rounded-xl">
+                            <p class="text-xs text-slate-400 font-semibold">STATUT</p>
+                            ${renderStatusBadge(found.status)}
+                        </div>
+                        <div class="p-3 bg-slate-50 rounded-xl">
+                            <p class="text-xs text-slate-400 font-semibold">PRÉSENCE</p>
+                            <p class="text-sm font-bold mt-0.5 ${found.present ? 'text-emerald-600' : 'text-red-500'}">
+                                ${found.present ? '✓ Présent' : '✗ Absent'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // ==================== UTILITY FUNCTIONS ====================
+        function renderExportDropdown(screen) {
+            return `
+                <div class="relative" id="export-dropdown-${screen}">
+                    <button onclick="toggleExportDropdown('${screen}')" class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-all">
+                        <i class="fas fa-file-download text-xs"></i> Exporter <i class="fas fa-chevron-down text-[10px]"></i>
+                    </button>
+                    <div id="export-menu-${screen}" class="absolute right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 w-44 overflow-hidden hidden">
+                        <button onclick="exportPDF('${screen}')" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-red-50 transition-colors">
+                            <i class="fas fa-file-pdf text-red-500"></i> PDF / Imprimer
+                        </button>
+                        <button onclick="exportCSV('${screen}')" class="w-full flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-slate-700 hover:bg-emerald-50 transition-colors border-t border-slate-100">
+                            <i class="fas fa-file-excel text-emerald-600"></i> Excel / CSV
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleExportDropdown(screen) {
+            const menu = document.getElementById(`export-menu-${screen}`);
+            if (menu) {
+                menu.classList.toggle('hidden');
+                
+                // Close other dropdowns
+                document.querySelectorAll('[id^="export-menu-"]').forEach(el => {
+                    if (el.id !== `export-menu-${screen}`) {
+                        el.classList.add('hidden');
+                    }
+                });
+            }
+        }
+
+        function exportPDF(screen) {
+            switch(screen) {
+                case 'students':
+                    const filtered = students.filter(s => {
+                        const filter = document.getElementById('student-filter')?.value || 'tous';
+                        return filter === 'tous' || s.status === filter;
+                    });
+                    exportToPDF("Paiements élèves", ["Code","Nom","Classe","Total","Payé","Restant","Statut","Date"], 
+                        filtered.map(s => [s.id, s.name, s.class, fmt(s.fees), fmt(s.paid), fmt(s.fees - s.paid), s.status, s.lastPayment || "-"])
+                    );
+                    break;
+                case 'payments':
+                    const all = students.filter(s => s.lastPayment);
+                    exportToPDF("Rapport des encaissements", ["Code","Nom","Classe","Montant payé","Statut","Date"], 
+                        all.map(s => [s.id, s.name, s.class, fmt(s.paid), s.status, s.lastPayment || "-"])
+                    );
+                    break;
+                case 'expenses':
+                    exportToPDF("Registre des dépenses", ["Ref","Date","Catégorie","Description","Montant","Statut"], 
+                        expenses.map(e => [e.id, e.date, e.category, e.description, fmt(e.amount), e.validated ? "Validé" : "En attente"])
+                    );
+                    break;
+                case 'payroll':
+                    exportToPDF("Fiche de paie — Février 2025", ["Code","Nom","Rôle","Salaire","Statut"], 
+                        staff.map(s => [s.id, s.name, s.role, fmt(s.salary), s.paid ? "Payé" : "En attente"])
+                    );
+                    break;
+            }
+            toggleExportDropdown(screen);
+        }
+
+        function exportCSV(screen) {
+            switch(screen) {
+                case 'students':
+                    const filtered = students.filter(s => {
+                        const filter = document.getElementById('student-filter')?.value || 'tous';
+                        return filter === 'tous' || s.status === filter;
+                    });
+                    exportToCSV(["Code","Nom","Classe","Parent","Téléphone","Frais","Payé","Restant","Statut","Date"], 
+                        filtered.map(s => [s.id, s.name, s.class, s.parent, s.phone, s.fees, s.paid, s.fees - s.paid, s.status, s.lastPayment || ""]), 
+                        "paiements_eleves"
+                    );
+                    break;
+                case 'payments':
+                    const all = students.filter(s => s.lastPayment);
+                    exportToCSV(["Code","Nom","Classe","Payé","Total","Restant","Statut","Date"], 
+                        all.map(s => [s.id, s.name, s.class, s.paid, s.fees, s.fees - s.paid, s.status, s.lastPayment || ""]), 
+                        "encaissements"
+                    );
+                    break;
+                case 'expenses':
+                    exportToCSV(["Ref","Date","Catégorie","Description","Montant (FCFA)","Statut"], 
+                        expenses.map(e => [e.id, e.date, e.category, e.description, e.amount, e.validated ? "Validé" : "En attente"]), 
+                        "depenses"
+                    );
+                    break;
+                case 'payroll':
+                    exportToCSV(["Code","Nom","Rôle","Salaire (FCFA)","Statut"], 
+                        staff.map(s => [s.id, s.name, s.role, s.salary, s.paid ? "Payé" : "En attente"]), 
+                        "paie_fevrier_2025"
+                    );
+                    break;
+            }
+            toggleExportDropdown(screen);
+        }
+
+        // ==================== NAVIGATION ====================
+        function setActiveScreen(screen) {
+            currentScreen = screen;
+            renderScreen();
+            closeMenu();
+        }
+
+        function navigateTo(screen) {
+            currentScreen = screen;
+            renderScreen();
+            closeMenu();
+        }
+
+        function toggleMenu() {
+            const menu = document.getElementById('side-menu');
+            menu.classList.toggle('hidden');
+        }
+
+        function closeMenu() {
+            document.getElementById('side-menu').classList.add('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').innerHTML = '';
+            selectedStudent = null;
+            selectedReceipt = null;
+            showAddStudent = false;
+            showAddExpense = false;
+        }
+
+        // ==================== INITIALIZATION ====================
+        document.addEventListener('click', function(e) {
+            // Close export dropdowns when clicking outside
+            if (!e.target.closest('[id^="export-dropdown-"]')) {
+                document.querySelectorAll('[id^="export-menu-"]').forEach(el => {
+                    el.classList.add('hidden');
+                });
+            }
+        });
+
+        // Initialize
+        window.onload = function() {
+            renderScreen();
+        };
+    </script>
+</body>
+</html>
